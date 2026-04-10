@@ -75,7 +75,6 @@ class speech_togetherai implements speech_interface {
 	public function get_voices() : array {
 		$voices = $this->fetch_remote_voices();
 		if (!empty($voices)) {
-			$voices = $this->add_supplemental_voices($voices);
 			return $voices;
 		}
 
@@ -189,10 +188,7 @@ class speech_togetherai implements speech_interface {
 	public function get_models(): array {
 		return [
 			'hexgrad/Kokoro-82M' => 'Kokoro 82M',
-			'canopylabs/orpheus-3b-0.1-ft' => 'Orpheus 3B 0.1 FT',
-			'cartesia/sonic-3' => 'Cartesia Sonic 3',
-			'cartesia/sonic-2' => 'Cartesia Sonic 2',
-			'cartesia/sonic' => 'Cartesia Sonic'
+			'cartesia/sonic-2' => 'Cartesia Sonic 2'
 		];
 	}
 
@@ -291,20 +287,11 @@ class speech_togetherai implements speech_interface {
 			return 'hexgrad/Kokoro-82M';
 		}
 
-		$orphues_voices = ['tara', 'leah', 'jess', 'leo', 'dan', 'mia', 'zac', 'zoe'];
-		if (in_array(strtolower($voice), $orphues_voices, true)) {
-			return 'canopylabs/orpheus-3b-0.1-ft';
-		}
-
-		return 'cartesia/sonic-3';
+		return 'cartesia/sonic-2';
 	}
 
 	private function infer_language(string $model, string $voice) : ?string {
 		$voice = strtolower($voice);
-
-		if ($model === 'canopylabs/orpheus-3b-0.1-ft') {
-			return 'en';
-		}
 
 		if ($model === 'hexgrad/Kokoro-82M') {
 			$prefix = substr($voice, 0, 2);
@@ -358,12 +345,12 @@ class speech_togetherai implements speech_interface {
 
 	private function get_fallback_voices() : array {
 		return [
-			'Cartesia Sonic 3' => [
-				$this->build_voice_key('cartesia/sonic-3', 'helpful woman', 'en') => 'helpful woman (English)',
-				$this->build_voice_key('cartesia/sonic-3', 'customer support lady', 'en') => 'customer support lady (English)',
-				$this->build_voice_key('cartesia/sonic-3', 'korean narrator woman', 'ko') => 'korean narrator woman (Korean)',
-				$this->build_voice_key('cartesia/sonic-3', 'korean calm woman', 'ko') => 'korean calm woman (Korean)',
-				$this->build_voice_key('cartesia/sonic-3', 'korean narrator man', 'ko') => 'korean narrator man (Korean)'
+			'Cartesia Sonic 2' => [
+				$this->build_voice_key('cartesia/sonic-2', 'helpful woman', 'en') => 'helpful woman (English)',
+				$this->build_voice_key('cartesia/sonic-2', 'customer support lady', 'en') => 'customer support lady (English)',
+				$this->build_voice_key('cartesia/sonic-2', 'korean narrator woman', 'ko') => 'korean narrator woman (Korean)',
+				$this->build_voice_key('cartesia/sonic-2', 'korean calm woman', 'ko') => 'korean calm woman (Korean)',
+				$this->build_voice_key('cartesia/sonic-2', 'korean narrator man', 'ko') => 'korean narrator man (Korean)'
 			],
 			'Kokoro 82M' => [
 				$this->build_voice_key('hexgrad/Kokoro-82M', 'af_heart', 'en') => 'af_heart (English)',
@@ -371,39 +358,7 @@ class speech_togetherai implements speech_interface {
 				$this->build_voice_key('hexgrad/Kokoro-82M', 'jf_alpha', 'ja') => 'jf_alpha (Japanese)',
 				$this->build_voice_key('hexgrad/Kokoro-82M', 'zf_xiaobei', 'zh') => 'zf_xiaobei (Chinese)',
 				$this->build_voice_key('hexgrad/Kokoro-82M', 'hf_alpha', 'hi') => 'hf_alpha (Hindi)'
-			],
-			'Orpheus 3B 0.1 FT' => [
-				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'tara', 'en') => 'tara (English)',
-				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'leo', 'en') => 'leo (English)',
-				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'mia', 'en') => 'mia (English)'
 			]
 		];
-	}
-
-	private function add_supplemental_voices(array $voices) : array {
-		$supplemental = [
-			'Cartesia Sonic 3' => [
-				$this->build_voice_key('cartesia/sonic-3', 'helpful woman', 'en') => 'helpful woman (English)',
-				$this->build_voice_key('cartesia/sonic-3', 'customer support lady', 'en') => 'customer support lady (English)',
-				$this->build_voice_key('cartesia/sonic-3', 'korean narrator woman', 'ko') => 'korean narrator woman (Korean)',
-				$this->build_voice_key('cartesia/sonic-3', 'korean calm woman', 'ko') => 'korean calm woman (Korean)',
-				$this->build_voice_key('cartesia/sonic-3', 'korean narrator man', 'ko') => 'korean narrator man (Korean)'
-			]
-		];
-
-		foreach ($supplemental as $group => $group_voices) {
-			if (!isset($voices[$group])) {
-				$voices[$group] = [];
-			}
-			foreach ($group_voices as $key => $label) {
-				if (!isset($voices[$group][$key])) {
-					$voices[$group][$key] = $label;
-				}
-			}
-			asort($voices[$group]);
-		}
-
-		ksort($voices);
-		return $voices;
 	}
 }
