@@ -74,11 +74,7 @@ class speech_togetherai implements speech_interface {
 
 	public function get_voices() : array {
 		$voices = $this->fetch_remote_voices();
-		if (!empty($voices)) {
-			return $voices;
-		}
-
-		return $this->get_fallback_voices();
+		return $voices;
 	}
 
 	public function get_format() : string {
@@ -380,34 +376,4 @@ class speech_togetherai implements speech_interface {
 		return null;
 	}
 
-	private function get_fallback_voices() : array {
-		return [
-			'Cartesia Sonic' => [
-				$this->build_voice_key('cartesia/sonic', 'helpful woman', 'en') => 'helpful woman (English)',
-				$this->build_voice_key('cartesia/sonic', 'customer support lady', 'en') => 'customer support lady (English)',
-				$this->build_voice_key('cartesia/sonic', 'korean narrator woman', 'ko') => 'korean narrator woman (Korean)',
-				$this->build_voice_key('cartesia/sonic', 'korean calm woman', 'ko') => 'korean calm woman (Korean)',
-				$this->build_voice_key('cartesia/sonic', 'korean narrator man', 'ko') => 'korean narrator man (Korean)'
-			],
-			'Cartesia Sonic 2' => [
-				$this->build_voice_key('cartesia/sonic-2', 'helpful woman', 'en') => 'helpful woman (English)',
-				$this->build_voice_key('cartesia/sonic-2', 'customer support lady', 'en') => 'customer support lady (English)',
-				$this->build_voice_key('cartesia/sonic-2', 'korean narrator woman', 'ko') => 'korean narrator woman (Korean)',
-				$this->build_voice_key('cartesia/sonic-2', 'korean calm woman', 'ko') => 'korean calm woman (Korean)',
-				$this->build_voice_key('cartesia/sonic-2', 'korean narrator man', 'ko') => 'korean narrator man (Korean)'
-			],
-			'Kokoro 82M' => [
-				$this->build_voice_key('hexgrad/Kokoro-82M', 'af_heart', 'en') => 'af_heart (English)',
-				$this->build_voice_key('hexgrad/Kokoro-82M', 'am_adam', 'en') => 'am_adam (English)',
-				$this->build_voice_key('hexgrad/Kokoro-82M', 'jf_alpha', 'ja') => 'jf_alpha (Japanese)',
-				$this->build_voice_key('hexgrad/Kokoro-82M', 'zf_xiaobei', 'zh') => 'zf_xiaobei (Chinese)',
-				$this->build_voice_key('hexgrad/Kokoro-82M', 'hf_alpha', 'hi') => 'hf_alpha (Hindi)'
-			],
-			'Orpheus 3B 0.1 FT' => [
-				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'tara', 'en') => 'tara (English)',
-				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'leo', 'en') => 'leo (English)',
-				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'mia', 'en') => 'mia (English)'
-			]
-		];
-	}
 }
