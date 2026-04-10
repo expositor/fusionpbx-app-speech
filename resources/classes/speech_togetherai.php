@@ -188,6 +188,7 @@ class speech_togetherai implements speech_interface {
 	public function get_models(): array {
 		return [
 			'hexgrad/Kokoro-82M' => 'Kokoro 82M',
+			'canopylabs/orpheus-3b-0.1-ft' => 'Orpheus 3B 0.1 FT',
 			'cartesia/sonic-2' => 'Cartesia Sonic 2'
 		];
 	}
@@ -287,11 +288,20 @@ class speech_togetherai implements speech_interface {
 			return 'hexgrad/Kokoro-82M';
 		}
 
+		$orphues_voices = ['tara', 'leah', 'jess', 'leo', 'dan', 'mia', 'zac', 'zoe'];
+		if (in_array(strtolower($voice), $orphues_voices, true)) {
+			return 'canopylabs/orpheus-3b-0.1-ft';
+		}
+
 		return 'cartesia/sonic-2';
 	}
 
 	private function infer_language(string $model, string $voice) : ?string {
 		$voice = strtolower($voice);
+
+		if ($model === 'canopylabs/orpheus-3b-0.1-ft') {
+			return 'en';
+		}
 
 		if ($model === 'hexgrad/Kokoro-82M') {
 			$prefix = substr($voice, 0, 2);
@@ -358,6 +368,11 @@ class speech_togetherai implements speech_interface {
 				$this->build_voice_key('hexgrad/Kokoro-82M', 'jf_alpha', 'ja') => 'jf_alpha (Japanese)',
 				$this->build_voice_key('hexgrad/Kokoro-82M', 'zf_xiaobei', 'zh') => 'zf_xiaobei (Chinese)',
 				$this->build_voice_key('hexgrad/Kokoro-82M', 'hf_alpha', 'hi') => 'hf_alpha (Hindi)'
+			],
+			'Orpheus 3B 0.1 FT' => [
+				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'tara', 'en') => 'tara (English)',
+				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'leo', 'en') => 'leo (English)',
+				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'mia', 'en') => 'mia (English)'
 			]
 		];
 	}
