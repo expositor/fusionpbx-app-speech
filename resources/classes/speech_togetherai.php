@@ -189,6 +189,7 @@ class speech_togetherai implements speech_interface {
 		return [
 			'hexgrad/Kokoro-82M' => 'Kokoro 82M',
 			'canopylabs/orpheus-3b-0.1-ft' => 'Orpheus 3B 0.1 FT',
+			'cartesia/sonic' => 'Cartesia Sonic',
 			'cartesia/sonic-2' => 'Cartesia Sonic 2'
 		];
 	}
@@ -197,8 +198,6 @@ class speech_togetherai implements speech_interface {
 		if (empty($this->api_key)) {
 			return [];
 		}
-
-		$allowed_models = $this->get_models();
 
 		$ch = curl_init($this->get_voices_url());
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -229,11 +228,11 @@ class speech_togetherai implements speech_interface {
 		$voices = [];
 		foreach ($data as $model_voices) {
 			$model = $model_voices['model'] ?? null;
-			if (empty($model) || !array_key_exists($model, $allowed_models)) {
+			if (empty($model) || $this->is_dedicated_model($model)) {
 				continue;
 			}
 
-			$model_label = $allowed_models[$model];
+			$model_label = $this->format_model_label($model);
 			$voice_rows = $model_voices['voices'] ?? [];
 			if (!is_array($voice_rows)) {
 				continue;
@@ -277,6 +276,34 @@ class speech_togetherai implements speech_interface {
 		}
 
 		return 'https://api.together.ai/v1/voices';
+	}
+
+	private function is_dedicated_model(string $model) : bool {
+		$dedicated_models = [
+			'rime-labs/rime-mist-v2',
+			'rime-labs/rime-arcana-v2',
+			'rime-labs/rime-arcana-v3',
+			'rime-labs/rime-arcana-v3-turbo',
+			'minimax/speech-2',
+			'deepgram/aura-2'
+		];
+
+		return in_array($model, $dedicated_models, true);
+	}
+
+	private function format_model_label(string $model) : string {
+		$known_models = array_merge($this->get_models(), [
+			'cartesia/sonic-3' => 'Cartesia Sonic 3'
+		]);
+
+		if (isset($known_models[$model])) {
+			return $known_models[$model];
+		}
+
+		[$provider, $name] = array_pad(explode('/', $model, 2), 2, '');
+		$provider = ucwords(str_replace(['-', '_'], ' ', $provider));
+		$name = ucwords(str_replace(['-', '_'], ' ', $name));
+		return trim($provider.' '.$name);
 	}
 
 	private function build_voice_key(string $model, string $voice, ?string $language = null) : string {
@@ -355,6 +382,13 @@ class speech_togetherai implements speech_interface {
 
 	private function get_fallback_voices() : array {
 		return [
+			'Cartesia Sonic' => [
+				$this->build_voice_key('cartesia/sonic', 'helpful woman', 'en') => 'helpful woman (English)',
+				$this->build_voice_key('cartesia/sonic', 'customer support lady', 'en') => 'customer support lady (English)',
+				$this->build_voice_key('cartesia/sonic', 'korean narrator woman', 'ko') => 'korean narrator woman (Korean)',
+				$this->build_voice_key('cartesia/sonic', 'korean calm woman', 'ko') => 'korean calm woman (Korean)',
+				$this->build_voice_key('cartesia/sonic', 'korean narrator man', 'ko') => 'korean narrator man (Korean)'
+			],
 			'Cartesia Sonic 2' => [
 				$this->build_voice_key('cartesia/sonic-2', 'helpful woman', 'en') => 'helpful woman (English)',
 				$this->build_voice_key('cartesia/sonic-2', 'customer support lady', 'en') => 'customer support lady (English)',
