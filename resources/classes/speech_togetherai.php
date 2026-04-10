@@ -26,8 +26,8 @@ class speech_togetherai implements speech_interface {
 		$this->api_key = $settings->get('speech', 'api_key', '');
 		$this->api_url = $settings->get('speech', 'api_url', 'https://api.together.ai/v1/audio/speech');
 		$this->format = 'wav';
-		$this->model = 'hexgrad/Kokoro-82M';
-		$this->voice = 'af_heart';
+		$this->model = '';
+		$this->voice = '';
 	}
 
 	public function set_path(string $audio_path) {
@@ -91,10 +91,13 @@ class speech_togetherai implements speech_interface {
 		}
 
 		if (empty($this->voice)) {
-			$this->voice = 'af_heart';
+			return false;
 		}
 		if (empty($this->model)) {
 			$this->model = $this->infer_model($this->voice);
+		}
+		if (empty($this->model)) {
+			return false;
 		}
 
 		$headers = [
@@ -154,21 +157,25 @@ class speech_togetherai implements speech_interface {
 	}
 
 	public function set_model(string $model): void {
-		if (array_key_exists($model, $this->get_models())) {
+		if (!empty($model)) {
 			$this->model = $model;
 		}
 	}
 
 	public function get_models(): array {
-		return [
-			'hexgrad/Kokoro-82M' => 'Kokoro 82M',
-			'canopylabs/orpheus-3b-0.1-ft' => 'Orpheus 3B 0.1 FT',
-			'cartesia/sonic' => 'Cartesia Sonic',
-			'cartesia/sonic-2' => 'Cartesia Sonic 2'
-		];
+		$models = [];
+		foreach ($this->fetch_remote_catalog() as $model_voices) {
+			$model = $model_voices['model'] ?? null;
+			if (empty($model)) {
+				continue;
+			}
+			$models[$model] = $this->format_model_label($model);
+		}
+		asort($models);
+		return $models;
 	}
 
-	private function fetch_remote_voices() : array {
+	private function fetch_remote_catalog() : array {
 		if (empty($this->api_key)) {
 			return [];
 		}
@@ -199,10 +206,28 @@ class speech_togetherai implements speech_interface {
 			return [];
 		}
 
-		$voices = [];
+		$catalog = [];
 		foreach ($data as $model_voices) {
 			$model = $model_voices['model'] ?? null;
 			if (empty($model) || $this->is_dedicated_model($model)) {
+				continue;
+			}
+			$catalog[] = $model_voices;
+		}
+
+		return $catalog;
+	}
+
+	private function fetch_remote_voices() : array {
+		$data = $this->fetch_remote_catalog();
+		if (empty($data)) {
+			return [];
+		}
+
+		$voices = [];
+		foreach ($data as $model_voices) {
+			$model = $model_voices['model'] ?? null;
+			if (empty($model)) {
 				continue;
 			}
 
@@ -260,14 +285,6 @@ class speech_togetherai implements speech_interface {
 	}
 
 	private function format_model_label(string $model) : string {
-		$known_models = array_merge($this->get_models(), [
-			'cartesia/sonic-3' => 'Cartesia Sonic 3'
-		]);
-
-		if (isset($known_models[$model])) {
-			return $known_models[$model];
-		}
-
 		[$provider, $name] = array_pad(explode('/', $model, 2), 2, '');
 		$provider = ucwords(str_replace(['-', '_'], ' ', $provider));
 		$name = ucwords(str_replace(['-', '_'], ' ', $name));
@@ -279,16 +296,22 @@ class speech_togetherai implements speech_interface {
 	}
 
 	private function infer_model(string $voice) : string {
-		if (strpos($voice, '_') !== false) {
-			return 'hexgrad/Kokoro-82M';
+		foreach ($this->fetch_remote_catalog() as $model_voices) {
+			$model = $model_voices['model'] ?? null;
+			$voice_rows = $model_voices['voices'] ?? [];
+			if (empty($model) || !is_array($voice_rows)) {
+				continue;
+			}
+
+			foreach ($voice_rows as $voice_row) {
+				$voice_name = is_array($voice_row) ? ($voice_row['name'] ?? null) : $voice_row;
+				if (!empty($voice_name) && $voice_name === $voice) {
+					return $model;
+				}
+			}
 		}
 
-		$orphues_voices = ['tara', 'leah', 'jess', 'leo', 'dan', 'mia', 'zac', 'zoe'];
-		if (in_array(strtolower($voice), $orphues_voices, true)) {
-			return 'canopylabs/orpheus-3b-0.1-ft';
-		}
-
-		return 'cartesia/sonic-2';
+		return '';
 	}
 
 }
