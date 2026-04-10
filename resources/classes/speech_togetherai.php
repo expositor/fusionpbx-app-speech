@@ -54,9 +54,6 @@ class speech_togetherai implements speech_interface {
 		if (empty($this->model)) {
 			$this->model = $this->infer_model($audio_voice);
 		}
-		if (empty($this->language)) {
-			$this->language = $this->infer_language($this->model, $audio_voice);
-		}
 	}
 
 	public function set_language(string $audio_language) {
@@ -82,23 +79,7 @@ class speech_togetherai implements speech_interface {
 	}
 
 	public function get_languages() : array {
-		return [
-			'en' => 'English',
-			'fr' => 'French',
-			'de' => 'German',
-			'hi' => 'Hindi',
-			'it' => 'Italian',
-			'ja' => 'Japanese',
-			'ko' => 'Korean',
-			'nl' => 'Dutch',
-			'pl' => 'Polish',
-			'pt' => 'Portuguese',
-			'ru' => 'Russian',
-			'es' => 'Spanish',
-			'sv' => 'Swedish',
-			'tr' => 'Turkish',
-			'zh' => 'Chinese'
-		];
+		return [];
 	}
 
 	/**
@@ -114,9 +95,6 @@ class speech_togetherai implements speech_interface {
 		}
 		if (empty($this->model)) {
 			$this->model = $this->infer_model($this->voice);
-		}
-		if (empty($this->language)) {
-			$this->language = $this->infer_language($this->model, $this->voice);
 		}
 
 		$headers = [
@@ -244,15 +222,9 @@ class speech_togetherai implements speech_interface {
 				if (is_array($voice_row)) {
 					$language = $voice_row['language'] ?? $voice_row['language_code'] ?? $voice_row['locale'] ?? null;
 				}
-				if (empty($language)) {
-					$language = $this->infer_language($model, $voice_name);
-				}
 
 				$key = $this->build_voice_key($model, $voice_name, $language);
 				$label = $voice_name;
-				if (!empty($language) && isset($this->get_languages()[$language])) {
-					$label .= ' ('.$this->get_languages()[$language].')';
-				}
 				$voices[$model_label][$key] = $label;
 			}
 		}
@@ -317,63 +289,6 @@ class speech_togetherai implements speech_interface {
 		}
 
 		return 'cartesia/sonic-2';
-	}
-
-	private function infer_language(string $model, string $voice) : ?string {
-		$voice = strtolower($voice);
-
-		if ($model === 'canopylabs/orpheus-3b-0.1-ft') {
-			return 'en';
-		}
-
-		if ($model === 'hexgrad/Kokoro-82M') {
-			$prefix = substr($voice, 0, 2);
-			$prefix_map = [
-				'af' => 'en',
-				'am' => 'en',
-				'bf' => 'en',
-				'bm' => 'en',
-				'ef' => 'es',
-				'em' => 'es',
-				'ff' => 'fr',
-				'hf' => 'hi',
-				'hm' => 'hi',
-				'if' => 'it',
-				'im' => 'it',
-				'jf' => 'ja',
-				'jm' => 'ja',
-				'pf' => 'pt',
-				'pm' => 'pt',
-				'zf' => 'zh',
-				'zm' => 'zh'
-			];
-			return $prefix_map[$prefix] ?? null;
-		}
-
-		$patterns = [
-			'/korean/' => 'ko',
-			'/japanese/' => 'ja',
-			'/chinese/' => 'zh',
-			'/french/' => 'fr',
-			'/german/' => 'de',
-			'/italian/' => 'it',
-			'/spanish|mexican/' => 'es',
-			'/hindi|hinglish/' => 'hi',
-			'/russian/' => 'ru',
-			'/turkish/' => 'tr',
-			'/dutch/' => 'nl',
-			'/polish/' => 'pl',
-			'/swedish/' => 'sv',
-			'/brazilian|portuguese/' => 'pt'
-		];
-
-		foreach ($patterns as $pattern => $language) {
-			if (preg_match($pattern, $voice)) {
-				return $language;
-			}
-		}
-
-		return null;
 	}
 
 }
