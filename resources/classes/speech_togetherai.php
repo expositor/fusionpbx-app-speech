@@ -200,6 +200,8 @@ class speech_togetherai implements speech_interface {
 			return [];
 		}
 
+		$allowed_models = $this->get_models();
+
 		$ch = curl_init($this->get_voices_url());
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
@@ -229,9 +231,13 @@ class speech_togetherai implements speech_interface {
 		$voices = [];
 		foreach ($data as $model_voices) {
 			$model = $model_voices['model'] ?? null;
-			$model_label = $this->get_models()[$model] ?? $model;
+			if (empty($model) || !array_key_exists($model, $allowed_models)) {
+				continue;
+			}
+
+			$model_label = $allowed_models[$model];
 			$voice_rows = $model_voices['voices'] ?? [];
-			if (empty($model) || !is_array($voice_rows)) {
+			if (!is_array($voice_rows)) {
 				continue;
 			}
 
