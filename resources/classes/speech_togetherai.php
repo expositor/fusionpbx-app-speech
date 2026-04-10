@@ -75,6 +75,7 @@ class speech_togetherai implements speech_interface {
 	public function get_voices() : array {
 		$voices = $this->fetch_remote_voices();
 		if (!empty($voices)) {
+			$voices = $this->add_supplemental_voices($voices);
 			return $voices;
 		}
 
@@ -377,5 +378,32 @@ class speech_togetherai implements speech_interface {
 				$this->build_voice_key('canopylabs/orpheus-3b-0.1-ft', 'mia', 'en') => 'mia (English)'
 			]
 		];
+	}
+
+	private function add_supplemental_voices(array $voices) : array {
+		$supplemental = [
+			'Cartesia Sonic 3' => [
+				$this->build_voice_key('cartesia/sonic-3', 'helpful woman', 'en') => 'helpful woman (English)',
+				$this->build_voice_key('cartesia/sonic-3', 'customer support lady', 'en') => 'customer support lady (English)',
+				$this->build_voice_key('cartesia/sonic-3', 'korean narrator woman', 'ko') => 'korean narrator woman (Korean)',
+				$this->build_voice_key('cartesia/sonic-3', 'korean calm woman', 'ko') => 'korean calm woman (Korean)',
+				$this->build_voice_key('cartesia/sonic-3', 'korean narrator man', 'ko') => 'korean narrator man (Korean)'
+			]
+		];
+
+		foreach ($supplemental as $group => $group_voices) {
+			if (!isset($voices[$group])) {
+				$voices[$group] = [];
+			}
+			foreach ($group_voices as $key => $label) {
+				if (!isset($voices[$group][$key])) {
+					$voices[$group][$key] = $label;
+				}
+			}
+			asort($voices[$group]);
+		}
+
+		ksort($voices);
+		return $voices;
 	}
 }
